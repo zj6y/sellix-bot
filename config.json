@@ -1,8 +1,8 @@
 {
-  "prefix": "//",
-   "token" "",
-  "sellix_api_key": "",
-  "permission_roles":[67890],
-  "customer_role": 12345,
-  "restock_channel": 12345
+  "prefix": ">",
+  "token": "bot token here",
+  "permission_roles": [PermissionsRoleIDHere],
+  "api_key": "sellix api key here",
+  "customer_role": [CustomerRoleIDhere],
+  "restock_channel": [RestockChannelIDhere]
 }
