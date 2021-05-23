@@ -77,7 +77,7 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 
-@client.command(name="verify" aliases=["claim",]) #add more aliases if you'd like to
+@client.command(name="verify" aliases=["claim"]) #add more aliases if you'd like to
 async def verify(ctx, order_id):
     user = ctx.message.author
     order_information = get_order_information(order_id)
@@ -103,7 +103,7 @@ async def verify(ctx, order_id):
     await ctx.message.delete()
 
 
-@client.command(name="checkorder" aliases=["order" "orderid"]) #add more aliases if you'd like to
+@client.command(name="checkorder" aliases=["order", "orderid"]) #add more aliases if you'd like to
 async def checkorder(ctx, order_id):
     if not has_permissions(ctx):
         embed = discord.Embed(title="No permission",
