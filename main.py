@@ -72,13 +72,38 @@ async def help(ctx):
     embed.add_field(name=PREFIX+"stock", value="Displays the current stock", inline=False)
     embed.add_field(name=PREFIX+"claim <order_id>", value="Adds customer role to an user Aliases: verify", inline=False)
     if has_permissions(ctx):
-        embed.add_field(name=PREFIX+"checkorder <order_id>", value="Prints all information about an order Aliases: order, orderid", inline=False)
-        embed.add_field(name=PREFIX+"replace <order_id> <amount>", value="Replace account from shoppy stock", inline=False)
+        embed.add_field(name=PREFIX+"order <order_id>", value="Prints all information about an order Aliases: checkorder, orderid", inline=False)
+        embed.add_field(name=PREFIX+"replace <order_id> <amount>", value="Replace account from sellix stock", inline=False)
     await ctx.send(embed=embed)
 
 
-@client.command(name="verify" aliases=["claim"]) #add more aliases if you'd like to
+@client.command(name="verify")
 async def verify(ctx, order_id):
+    user = ctx.message.author
+    order_information = get_order_information(order_id)
+    if "status" in order_information and order_information["status"] is False:
+        embed = discord.Embed(title="Order not found",
+                              description="This order was not found",
+                              color=0xf04947())
+        await ctx.send(embed=embed)
+        await ctx.message.delete()
+        return
+    order_information = order_information["data"]["order"]
+    if order_information["status"] != 1:
+        embed = discord.Embed(title="Order not confirmed",
+                              description="This order is not confirmed yet. Please try again later",
+                              color=0xfdcb58())
+        await ctx.send(embed=embed)
+        await ctx.message.delete()
+        return
+    await user.add_roles(discord.utils.get(ctx.message.guild.roles, id=CUSTOMER_ROLE))
+    embed = discord.Embed(title="Success", description="You should recieve the customer role now!",
+                          color=discord.Color.green())
+    await ctx.send(embed=embed)
+    await ctx.message.delete()
+    
+@client.command(name="claim")
+async def claim(ctx, order_id):
     user = ctx.message.author
     order_information = get_order_information(order_id)
     if "status" in order_information and order_information["status"] is False:
@@ -103,7 +128,7 @@ async def verify(ctx, order_id):
     await ctx.message.delete()
 
 
-@client.command(name="checkorder" aliases=["order", "orderid"]) #add more aliases if you'd like to
+@client.command(name="checkorder")
 async def checkorder(ctx, order_id):
     if not has_permissions(ctx):
         embed = discord.Embed(title="No permission",
@@ -153,7 +178,108 @@ async def checkorder(ctx, order_id):
         embed.add_field(name="`" + str(count) + "`", value=str(account), inline=False)
         count = count + 1
     await ctx.send(embed=embed)
+    
+@client.command(name="order")
+async def order(ctx, order_id):
+    if not has_permissions(ctx):
+        embed = discord.Embed(title="No permission",
+                              description="You don't have the permissions to execute this command",
+                              color=0xf04947())
+        await ctx.send(embed=embed)
+        return
+    order_information = get_order_information(order_id)
+    if "status" in order_information and order_information["status"] == 404:
+        embed = discord.Embed(title="Order not found",
+                              description="This order was not found",
+                              color=0xf04947())
+        await ctx.send(embed=embed)
+        return
 
+    order_information = order_information["data"]["order"]
+
+    embed = discord.Embed(title="Order Info", description="Order ID: "+order_information["uniqid"], color=0x6a3ce2())
+    embed.add_field(name="Email", value=order_information["customer_email"], inline=False)
+    embed.add_field(name="Product Name", value=order_information["product_title"], inline=False)
+    embed.add_field(name="Price", value=str(order_information["total_display"])+str(order_information["currency"]), inline=False)
+    embed.add_field(name="Created at", value=order_information["created_at"], inline=False)
+    embed.add_field(name="Gateway", value=order_information["gateway"], inline=False)
+    embed.add_field(name="Quantity", value=order_information["quantity"], inline=False)
+    if order_information["status"] == 1:
+        status = "Completed"
+    elif order_information["status"] == 2:
+        status = "Cancelled"
+    elif order_information["status"] == 3:
+        status = "Waiting for confirmation"
+    elif order_information["status"] == 4:
+        status = "Partial Payment"
+    else:
+        status = "Pending"
+    embed.add_field(name="Status", value=status, inline=False)
+    if order_information["crypto_address"]:
+        embed.add_field(name="Crypto Address", value=order_information["crypto_address"], inline=False)
+    await ctx.send(embed=embed)
+
+    embed = discord.Embed(title="Delivered Goods", description="Order ID: "+order_information["uniqid"], color=0x6a3ce2())
+    count = 0
+    for account in order_information["serials"]:
+        if count % 25 == 0 and count / 25 != 0:
+            await ctx.send(embed=embed)
+            embed = discord.Embed(title="Delivered Goods", description="Page " + str(round(count / 25) + 1),
+                                  color=discord.Color.green())
+        embed.add_field(name="`" + str(count) + "`", value=str(account), inline=False)
+        count = count + 1
+    await ctx.send(embed=embed)
+
+@client.command(name="orderid")
+async def orderid(ctx, order_id):
+    if not has_permissions(ctx):
+        embed = discord.Embed(title="No permission",
+                              description="You don't have the permissions to execute this command",
+                              color=0xf04947())
+        await ctx.send(embed=embed)
+        return
+    order_information = get_order_information(order_id)
+    if "status" in order_information and order_information["status"] == 404:
+        embed = discord.Embed(title="Order not found",
+                              description="This order was not found",
+                              color=0xf04947())
+        await ctx.send(embed=embed)
+        return
+
+    order_information = order_information["data"]["order"]
+
+    embed = discord.Embed(title="Order Info", description="Order ID: "+order_information["uniqid"], color=0x6a3ce2())
+    embed.add_field(name="Email", value=order_information["customer_email"], inline=False)
+    embed.add_field(name="Product Name", value=order_information["product_title"], inline=False)
+    embed.add_field(name="Price", value=str(order_information["total_display"])+str(order_information["currency"]), inline=False)
+    embed.add_field(name="Created at", value=order_information["created_at"], inline=False)
+    embed.add_field(name="Gateway", value=order_information["gateway"], inline=False)
+    embed.add_field(name="Quantity", value=order_information["quantity"], inline=False)
+    if order_information["status"] == 1:
+        status = "Completed"
+    elif order_information["status"] == 2:
+        status = "Cancelled"
+    elif order_information["status"] == 3:
+        status = "Waiting for confirmation"
+    elif order_information["status"] == 4:
+        status = "Partial Payment"
+    else:
+        status = "Pending"
+    embed.add_field(name="Status", value=status, inline=False)
+    if order_information["crypto_address"]:
+        embed.add_field(name="Crypto Address", value=order_information["crypto_address"], inline=False)
+    await ctx.send(embed=embed)
+
+    embed = discord.Embed(title="Delivered Goods", description="Order ID: "+order_information["uniqid"], color=0x6a3ce2())
+    count = 0
+    for account in order_information["serials"]:
+        if count % 25 == 0 and count / 25 != 0:
+            await ctx.send(embed=embed)
+            embed = discord.Embed(title="Delivered Goods", description="Page " + str(round(count / 25) + 1),
+                                  color=discord.Color.green())
+        embed.add_field(name="`" + str(count) + "`", value=str(account), inline=False)
+        count = count + 1
+    await ctx.send(embed=embed)
 
 @client.command(name="stock")
 async def stock(ctx):
