@@ -41,6 +41,12 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    pip install requests
    ```
+   ```sh
+   pip install colorama
+   ```
+   ```sh
+   easy_install colorama
+   ```
 4. Enter your Token, API Key, Role IDs, and Channel IDs   in `config.json`
    ```JSON
    "prefix": ">",
