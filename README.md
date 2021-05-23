@@ -1,3 +1,13 @@
+<!-- PROJECT LOGO -->
+
+  <h3 align="center">Sellix Bot</h3>
+
+  <p align="center">
+    <br />
+    <a href="https://github.com/zj6y/sellix-bot/issues">Report Bug</a>
+  </p>
+
+
 <!-- TABLE OF CONTENTS -->
 <details open="open">
   <summary>Table of Contents</summary>
